@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum ConsultationStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum ServiceType {
+  PERSONAL_CONSULTATION
+  NAME_NUMEROLOGY
+  LO_SHU_GRID
+  MOBILE_NUMEROLOGY
+  BUSINESS_CONSULTATION
+  COMPLETE_PACKAGE
+}
+
+model Consultation {
+  id            String             @id @default(uuid())
+  fullName      String             @map("full_name")
+  email         String
+  phone         String
+  serviceType   ServiceType        @map("service_type")
+  message       String?            @db.Text
+  preferredDate DateTime?          @map("preferred_date") @db.Date
+  status        ConsultationStatus @default(PENDING)
+  createdAt     DateTime           @default(now()) @map("created_at")
+  updatedAt     DateTime           @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("consultations")
+}
+
+model PortalUser {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  phone        String?
+  passwordHash String    @map("password_hash")
+  fullName     String?   @map("full_name")
+  dateOfBirth  DateTime? @map("date_of_birth") @db.Date
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  records UserNumerologyRecord[]
+
+  @@map("portal_users")
+}
+
+model OtpChallenge {
+  id        String   @id @default(uuid())
+  email     String
+  phone     String?
+  codeHash  String   @map("code_hash")
+  purpose   String   @default("FULL_REPORT")
+  payload   Json
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([email])
+  @@index([expiresAt])
+  @@map("otp_challenges")
+}
+
+enum RecordKind {
+  PREVIEW
+  FULL_REPORT
+}
+
+model UserNumerologyRecord {
+  id              String     @id @default(uuid())
+  userId          String?    @map("user_id")
+  email           String
+  phone           String?
+  fullName        String     @map("full_name")
+  dateOfBirth     DateTime   @map("date_of_birth") @db.Date
+  gender          String
+  calculationJson Json       @map("calculation_json")
+  raashiJson      Json       @map("raashi_json")
+  pdfFileName     String?    @map("pdf_file_name")
+  recordKind      RecordKind @default(FULL_REPORT) @map("record_kind")
+  createdAt       DateTime   @default(now()) @map("created_at")
+
+  user PortalUser? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([email])
+  @@index([createdAt])
+  @@map("user_numerology_records")
+}

@@ -1,0 +1,14 @@
+node_modules/
+dist/
+server/dist/
+build/
+.env
+.env.local
+*.log
+.DS_Store
+Thumbs.db
+server/uploads/
+client/dist/
+.gh-pages-work/
+coverage/
+*.tsbuildinfo
